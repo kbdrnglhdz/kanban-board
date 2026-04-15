@@ -59,6 +59,13 @@ cd frontend && npm install
 Detalles completos en `workshop/proyecto.md`.
 Detalles de arquitectura en `architecture/**`.
 
+## Bugs corregidos
+
+| # | Descripción | Corrección |
+|---|-------------|------------|
+| 1 | GET /tasks - 20% respuestas con `status` alterado | Eliminada lógica corrupta de alteración aleatoria |
+| 4 | DELETE /tasks/:id - Soft delete sin filtrar en GET | GET ahora excluye registros con `deleted_at` |
+
 ## Testing
 ```bash
 curl http://localhost:3000/tasks

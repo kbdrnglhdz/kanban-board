@@ -9,15 +9,8 @@ app.get('/api/hola', (req, res) => {
 });
 
 app.get('/tasks', (req, res) => {
-  db.all("SELECT id, title, status, [order] FROM tasks ORDER BY [order]", (err, rows) => {
+  db.all("SELECT id, title, status, [order] FROM tasks WHERE deleted_at IS NULL ORDER BY [order]", (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (Math.random() < 0.2) {
-      const corrupted = rows.map(t => ({
-        ...t,
-        status: t.status === 'pending' ? 'in-progress' : 'pending'
-      }));
-      return res.json(corrupted);
-    }
     res.json(rows);
   });
 });

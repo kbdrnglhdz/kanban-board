@@ -27,7 +27,10 @@
 ```bash
 # 1. Instalar OpenCode (Linux/macOS/WSL)
 curl -fsSL https://opencode.ai/install | bash
-Windows 
+## 1.1. Resolver problemas en Windows
+
+npm config set strict-ssl false
+
 
 # Verificar instalación
 opencode --version
@@ -91,7 +94,7 @@ Cambia el título del index.html a "Mi Kanban"
 ### Teoría del día
 
 - **Herramientas de OpenCode:** `read`, `write`, `edit`, `bash`, `grep`, `glob`, `list`.
-- **Permisos:** `allow` (automático), `ask` (pregunta), `deny` (bloquea). Se configuran en `opencode.json`.
+- **Permisos:** `allow` (automático), `ask` (pregunta), `deny` (bloquea). Se configuran en `opencode.json`. 
 - **Modo Plan** (solo lectura, para analizar) vs **Modo Build** (ejecuta cambios). Se cambia con `Tab`.
 - Comando `/compact` para resumir conversaciones largas.
 - Comando `/details` para ver ejecución de herramientas.
@@ -100,7 +103,7 @@ Cambia el título del index.html a "Mi Kanban"
 
 ```bash
 # 1. Asegurar que el backend está corriendo (en otra terminal)
-cd ~/kanban-board/backend
+cd backend
 npm start
 
 # 2. Abrir OpenCode en el proyecto
@@ -113,7 +116,7 @@ Crea un archivo opencode.json con:
 {
   "permission": {
     "edit": "ask",
-    "bash": "ask",
+    "bash" "ask",
     "read": "allow",
     "grep": "allow"
   }
@@ -131,7 +134,7 @@ Analiza el problema del GET /tasks que corrompe el status. Propón una solución
 Elimina el bloque if (Math.random() < 0.2) que modifica el status.
 
 # 7. Verificar corrección (en otra terminal)
-for i in {1..10}; do curl -s http://localhost:3000/tasks | jq '.[0].status'; done
+for i in {1..10}; do curl -s http://localhost:3000/tasks '.[0].status'; done
 
 # 8. Detectar problema 4 (DELETE)
 Analiza el endpoint DELETE /tasks/:id. ¿Qué problema tiene con la eliminación?

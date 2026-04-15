@@ -32,9 +32,19 @@ cd frontend
 npm install
 npm run dev
 
-# Para mantener el servidor activo en segundo plano:
+# Para mantener el servidor activo en segundo plano en Linux:
 nohup npm run dev > /tmp/vite.log 2>&1 &
 ```
+
+# Para mantener el servidor activo en segundo plano en Windows:
+
+* **Powershell**
+Start-Process -WindowStyle Hidden -FilePath "npm" -ArgumentList "run dev" -RedirectStandardOutput "C:\temp\vite.log" -RedirectStandardError "C:\temp\vite.log"
+* **CMD**
+- Crear la carpeta temp si no existe
+mkdir C:\temp 2>nul
+- Ejecutar en segundo plano
+start /b npm run dev > C:\temp\vite.log 2>&1
 
 ## Solución de problemas
 
