@@ -154,63 +154,70 @@ app.post('/tasks/:id/reorder', (req, res) => {
     return res.status(400).json({ error: "Valid order position is required" });
   }
 
-  db.serialize(() => {
-    db.run("BEGIN TRANSACTION", (err) => {
-      if (err) return res.status(500).json({ error: err.message });
+  db.get("SELECT COUNT(*) as total FROM tasks WHERE deleted_at IS NULL", (err, countRow) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (newOrder < 1 || newOrder > countRow.total) {
+      return res.status(400).json({ error: `Order must be between 1 and ${countRow.total}` });
+    }
 
-      db.get("SELECT [order] as currentOrder FROM tasks WHERE id = ? AND deleted_at IS NULL", taskId, (err, row) => {
-        if (err || !row) {
-          db.run("ROLLBACK");
-          return res.status(404).json({ error: "Task not found" });
-        }
+    db.serialize(() => {
+      db.run("BEGIN TRANSACTION", (err) => {
+        if (err) return res.status(500).json({ error: err.message });
 
-        const currentOrder = row.currentOrder;
+        db.get("SELECT [order] as currentOrder FROM tasks WHERE id = ? AND deleted_at IS NULL", taskId, (err, row) => {
+          if (err || !row) {
+            db.run("ROLLBACK");
+            return res.status(404).json({ error: "Task not found" });
+          }
 
-        if (newOrder === currentOrder) {
-          db.run("COMMIT");
-          return res.json({ message: "Order unchanged" });
-        }
+          const currentOrder = row.currentOrder;
 
-        let shiftQuery;
-        if (newOrder > currentOrder) {
-          shiftQuery = `UPDATE tasks SET [order] = [order] - 1 
-                        WHERE [order] > ? AND [order] <= ? AND deleted_at IS NULL AND id != ?`;
-          db.run(shiftQuery, [currentOrder, newOrder, taskId], (err) => {
-            if (err) {
-              db.run("ROLLBACK");
-              return res.status(500).json({ error: err.message });
-            }
-            db.run("UPDATE tasks SET [order] = ? WHERE id = ?", [newOrder, taskId], function(err) {
+          if (newOrder === currentOrder) {
+            db.run("COMMIT");
+            return res.json({ message: "Order unchanged" });
+          }
+
+          let shiftQuery;
+          if (newOrder > currentOrder) {
+            shiftQuery = `UPDATE tasks SET [order] = [order] - 1 
+                          WHERE [order] > ? AND [order] <= ? AND deleted_at IS NULL AND id != ?`;
+            db.run(shiftQuery, [currentOrder, newOrder, taskId], (err) => {
               if (err) {
                 db.run("ROLLBACK");
                 return res.status(500).json({ error: err.message });
               }
-              db.run("COMMIT", (err) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json({ message: "Task reordered successfully", id: taskId, order: newOrder });
+              db.run("UPDATE tasks SET [order] = ? WHERE id = ?", [newOrder, taskId], function(err) {
+                if (err) {
+                  db.run("ROLLBACK");
+                  return res.status(500).json({ error: err.message });
+                }
+                db.run("COMMIT", (err) => {
+                  if (err) return res.status(500).json({ error: err.message });
+                  res.json({ message: "Task reordered successfully", id: taskId, order: newOrder });
+                });
               });
             });
-          });
-        } else {
-          shiftQuery = `UPDATE tasks SET [order] = [order] + 1 
-                        WHERE [order] >= ? AND [order] < ? AND deleted_at IS NULL AND id != ?`;
-          db.run(shiftQuery, [newOrder, currentOrder, taskId], (err) => {
-            if (err) {
-              db.run("ROLLBACK");
-              return res.status(500).json({ error: err.message });
-            }
-            db.run("UPDATE tasks SET [order] = ? WHERE id = ?", [newOrder, taskId], function(err) {
+          } else {
+            shiftQuery = `UPDATE tasks SET [order] = [order] + 1 
+                          WHERE [order] >= ? AND [order] < ? AND deleted_at IS NULL AND id != ?`;
+            db.run(shiftQuery, [newOrder, currentOrder, taskId], (err) => {
               if (err) {
                 db.run("ROLLBACK");
                 return res.status(500).json({ error: err.message });
               }
-              db.run("COMMIT", (err) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json({ message: "Task reordered successfully", id: taskId, order: newOrder });
+              db.run("UPDATE tasks SET [order] = ? WHERE id = ?", [newOrder, taskId], function(err) {
+                if (err) {
+                  db.run("ROLLBACK");
+                  return res.status(500).json({ error: err.message });
+                }
+                db.run("COMMIT", (err) => {
+                  if (err) return res.status(500).json({ error: err.message });
+                  res.json({ message: "Task reordered successfully", id: taskId, order: newOrder });
+                });
               });
             });
-          });
-        }
+          }
+        });
       });
     });
   });
