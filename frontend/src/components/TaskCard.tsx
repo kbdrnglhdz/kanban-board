@@ -21,7 +21,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, onDelete, onUpda
       onDragStart={handleDragStart}
     >
       <span>{task.title}</span>
-      <button onClick={() => onDelete(task.id)}>Eliminar</button>
+      <button onClick={() => {
+        if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+          onDelete(task.id);
+        }
+      }}>Eliminar</button>
     </div>
   );
 };

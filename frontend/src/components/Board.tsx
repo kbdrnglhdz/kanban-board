@@ -5,17 +5,39 @@ import Column from './Column';
 import AddTaskForm from './AddTaskForm';
 
 const Board: React.FC = () => {
-  const { tasks, updateTask, deleteTask, addTask } = useTasks();
+  const { tasks, updateTask, deleteTask, addTask, isMoving, setIsMoving } = useTasks();
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
   const handleDragStart = (task: Task) => {
     setDraggedTask(task);
   };
 
-  const handleDrop = (targetStatus: Task['status']) => {
+  const handleDrop = (targetStatus: Task['status'], dropIndex: number) => {
     if (!draggedTask) return;
-    updateTask(draggedTask.id, { status: targetStatus });
-    setDraggedTask(null);
+    
+    setIsMoving(true);
+    
+    const targetTasks = tasks.filter(t => t.status === targetStatus);
+    targetTasks.sort((a, b) => a.order - b.order);
+    
+    let newOrder: number;
+    
+    if (targetTasks.length === 0) {
+      newOrder = 1;
+    } else if (dropIndex === 0) {
+      newOrder = targetTasks[0].order - 1000 || 1;
+    } else if (dropIndex >= targetTasks.length) {
+      newOrder = targetTasks[targetTasks.length - 1].order + 1000;
+    } else {
+      const prevOrder = targetTasks[dropIndex - 1].order;
+      const nextOrder = targetTasks[dropIndex].order;
+      newOrder = Math.floor((prevOrder + nextOrder) / 2);
+    }
+
+    updateTask(draggedTask.id, { status: targetStatus, order: newOrder }).finally(() => {
+      setIsMoving(false);
+      setDraggedTask(null);
+    });
   };
 
   const tasksByStatus = (status: Task['status']) =>
@@ -33,6 +55,7 @@ const Board: React.FC = () => {
           onDrop={handleDrop}
           onDelete={deleteTask}
           onUpdate={updateTask}
+          disabled={isMoving}
         />
         <Column
           title="En Progreso"
@@ -42,15 +65,17 @@ const Board: React.FC = () => {
           onDrop={handleDrop}
           onDelete={deleteTask}
           onUpdate={updateTask}
+          disabled={isMoving}
         />
         <Column
           title="Hecho"
-          status="done"
-          tasks={tasksByStatus('done')}
+          status="completed"
+          tasks={tasksByStatus('completed')}
           onDragStart={handleDragStart}
           onDrop={handleDrop}
           onDelete={deleteTask}
           onUpdate={updateTask}
+          disabled={isMoving}
         />
       </div>
     </div>

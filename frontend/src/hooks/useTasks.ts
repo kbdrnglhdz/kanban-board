@@ -3,7 +3,8 @@ import { Task } from '../types';
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
 
   const fetchTasks = async () => {
     const res = await fetch('/api/tasks');
@@ -18,7 +19,8 @@ export function useTasks() {
       body: JSON.stringify({ title, status }),
     });
     if (!res.ok) {
-      return;
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Error al crear la tarea');
     }
     const newTask = await res.json();
     setTasks(prev => [...prev, newTask]);
@@ -42,5 +44,5 @@ export function useTasks() {
     fetchTasks();
   }, []);
 
-  return { tasks, addTask, updateTask, deleteTask, loading };
+  return { tasks, addTask, updateTask, deleteTask, loading, isMoving, setIsMoving };
 }
